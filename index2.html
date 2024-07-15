@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post a New Product</title>
+<!-- Link to Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<!-- Custom CSS -->
+<style>
+  body {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    font-family: Arial, sans-serif;
+  }
+  .container {
+    margin-top: 50px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  #productForm {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  #uploadPreview img {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  #postList {
+    margin-top: 30px;
+  }
+  .post-item {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    width: 600px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .post-item img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+  .like-icon, .dislike-icon {
+    cursor: pointer;
+    margin-right: 10px;
+    font-size: 1.5em;
+  }
+  .vote-section {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .vote-section span {
+    margin-right: 10px;
+  }
+  h2 {
+    text-align: center;
+    color: #333;
+  }
+  .form-group label {
+    font-weight: bold;
+  }
+  .btn-primary, .btn-primary:focus {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+  }
+  .btn-primary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.5);
+  }
+</style>
+</head>
+<body>
+
+<section class="container">
+  <h2>Post a New Product</h2>
+  <form id="productForm">
+    <div class="form-group">
+      <label for="title">Title:</label>
+      <input type="text" class="form-control" id="title" placeholder="Enter title" required>
+    </div>
+    <div class="form-group">
+      <label for="description">Description:</label>
+      <textarea class="form-control" id="description" rows="3" placeholder="Enter description" required></textarea>
+    </div>
+    <div class="form-group">
+      <label for="imageUpload">Upload Image:</label>
+      <input type="file" class="form-control-file" id="imageUpload" accept="image/*" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+
+  <div id="uploadPreview"></div>
+  
+  <div id="postList"></div>
+
+</section>
+
+<!-- Link to jQuery and Bootstrap JS -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+    var lastNotifiedVotes = 0;
+
+    // Image preview
+    $('#imageUpload').change(function() {
+      var input = this;
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          $('#uploadPreview').html('<img src="' + e.target.result + '">');
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
+    });
+
+    // Form submission
+    $('#productForm').submit(function(e) {
+      e.preventDefault();
+      var title = $('#title').val();
+      var description = $('#description').val();
+      var image = $('#imageUpload')[0].files[0];
+      if (title && description && image) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var postHtml = `
+            <div class="post-item">
+              <h4>${title}</h4>
+              <p>${description}</p>
+              <p>New design to review: Do upvote the Design if you find it matches your taste.</p>
+              <img src="${e.target.result}">
+              <div class="vote-section">
+                <span class="like-icon">&#128077;</span> <span class="like-count">0</span>
+                <span class="dislike-icon">&#128078;</span> <span class="dislike-count">0</span>
+              </div>
+            </div>
+          `;
+          $('#postList').append(postHtml);
+        }
+        reader.readAsDataURL(image);
+
+        // Reset form fields
+        $('#title').val('');
+        $('#description').val('');
+        $('#imageUpload').val('');
+        $('#uploadPreview').empty().hide();
+      } else {
+        alert('Please provide a title, description, and upload an image.');
+      }
+    });
+
+    // Delegate click event to dynamically created elements
+    $('#postList').on('click', '.like-icon', function() {
+      var likeCount = $(this).siblings('.like-count');
+      likeCount.text(parseInt(likeCount.text()) + 1);
+      checkVotes();
+    });
+
+    $('#postList').on('click', '.dislike-icon', function() {
+      var dislikeCount = $(this).siblings('.dislike-count');
+      dislikeCount.text(parseInt(dislikeCount.text()) + 1);
+      checkVotes();
+    });
+
+    function checkVotes() {
+      $('#postList .post-item').each(function() {
+        var likeCount = parseInt($(this).find('.like-count').text());
+        var dislikeCount = parseInt($(this).find('.dislike-count').text());
+        var totalVotes = likeCount + dislikeCount;
+
+        if (totalVotes === 5 || totalVotes === 10 || totalVotes === 20) {
+          alert('Total votes reached ' + totalVotes + '. More than 50% upvotes! Notifying Manufacturer about this demanding product.');
+        }
+
+        if (totalVotes >= 5 && likeCount / totalVotes >= 0.5) {
+          alert('More than 50% upvotes! Notifying Manufacturer about this demanding product');
+          // Here you can implement the notification process
+        }
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
